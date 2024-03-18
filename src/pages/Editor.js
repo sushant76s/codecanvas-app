@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import { Grid, TextField, MenuItem, Button } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
@@ -20,6 +21,7 @@ const languages = [
 ];
 
 const Editor = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [language, setLanguage] = useState("");
   const [code, setCode] = useState("");
@@ -31,6 +33,9 @@ const Editor = () => {
   };
   const handleSubmitCode = () => {
     console.log("submit code.");
+  };
+  const redirectToAllSubmissions = () => {
+    navigate("/entries");
   };
 
   return (
@@ -63,14 +68,12 @@ const Editor = () => {
             </TextField>
           </Grid>
           <Grid item xs={12}>
-            {/* <Suspense fallback={<div>Loading...</div>}> */}
             <CodeMirror
               value={code}
-              height="400px"
+              height="440px"
               onChange={setCode}
               theme={vscodeDark}
             />
-            {/* </Suspense> */}
           </Grid>
         </Grid>
       </Grid>
@@ -118,6 +121,16 @@ const Editor = () => {
               fullWidth
             >
               Submit Code
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={redirectToAllSubmissions}
+              fullWidth
+            >
+              All submissions
             </Button>
           </Grid>
         </Grid>

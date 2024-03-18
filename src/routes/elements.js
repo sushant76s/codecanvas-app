@@ -1,8 +1,15 @@
-import { lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
+import CircularProgress from '@mui/material/CircularProgress';
 
 // ----------------------------------------------------------------------
 
-const Loadable = (Component) => (props) => <Component {...props} />;
+const Loadable = (Component) => (props) =>
+  (
+    <Suspense fallback={<CircularProgress />}>
+      <Component {...props} />
+    </Suspense>
+  );
+
 
 // ----------------------------------------------------------------------
 
