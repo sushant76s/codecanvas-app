@@ -1,9 +1,19 @@
-import React from 'react'
+import React, {useState} from 'react'
+import CodeMirror from '@uiw/react-codemirror';
+import { vscodeDark } from "@uiw/codemirror-theme-vscode";
+
 
 const Editor = () => {
     console.log("Editor Page");
+
+    const [code, setCode] = useState('');
   return (
-    <div>Editor</div>
+    <CodeMirror
+    value={code}
+    height='100px'
+    onChange={setCode}
+    theme={vscodeDark}
+    />
   )
 }
 
