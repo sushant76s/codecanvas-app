@@ -12,6 +12,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@uiw/codemirror-theme-vscode": "^4.21.24",
     "@uiw/react-codemirror": "^4.21.24",
+    "axios": "^1.6.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^6.22.3",

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Grid, TextField, MenuItem, Button } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
+import { postData } from "../services/SubmissionsApi";
 
 const languages = [
   {
@@ -31,8 +32,17 @@ const Editor = () => {
   const handleRunCode = () => {
     console.log("code run.");
   };
-  const handleSubmitCode = () => {
+  const handleSubmitCode = async() => {
     console.log("submit code.");
+    const data = {
+      username: username,
+      code_language: language,
+      stdIn: stdInput,
+      stdOut: stdOutput,
+      code: code
+    }
+    const pd = await postData(data);
+    console.log("submit response: ", pd);
   };
   const redirectToAllSubmissions = () => {
     navigate("/entries");

@@ -13,19 +13,21 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Stack from '@mui/material/Stack';
 import { Divider } from "@mui/material";
+import { getData, postData } from "../services/SubmissionsApi";
+import { SERVER_ENDPOINT } from "../config-global";
 
 const columns = [
   { id: "username", label: "USER", minWidth: 170 },
   { id: "code_language", label: "CODE LANGUAGE", minWidth: 100, align: 'center' },
   {
-    id: "std_inp",
+    id: "stdIn",
     label: "INPUT",
     minWidth: 170,
     align: "center",
     // format: (value) => value.toLocaleString("en-US"),
   },
   {
-    id: "std_out",
+    id: "stdOut",
     label: "OUTPUT",
     minWidth: 170,
     align: "center",
@@ -42,10 +44,10 @@ const columns = [
 
 function createData(user, lang, inp, out, code) {
   // const density = population / size;
-  return { username: user, code_language: lang, std_inp: inp, std_out: out, code };
+  return { username: user, code_language: lang, stdIn: inp, stdOut: out, code };
 }
 
-const rows = [
+const crows = [
   createData("John", "C++", 36, 6, "Hello, World!"),
   createData("John", "C++", 36, 6, "Hello, World!"),
 ];
@@ -65,7 +67,26 @@ export default function Entries() {
     setPage(0);
   };
 
-  const backToEditor = () => {
+  const [rows, setRows] = React.useState(crows);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getData();
+        console.log("Data: ", data.data);
+        setRows(data.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  
+  
+
+  const backToEditor = async() => {
     navigate("/editor");
   };
 
@@ -76,6 +97,8 @@ export default function Entries() {
     textAlign: "center",
     color: theme.palette.text.secondary,
   }));
+
+  console.log("url: ", SERVER_ENDPOINT)
 
   return (
     <>
