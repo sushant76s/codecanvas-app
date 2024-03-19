@@ -5,24 +5,12 @@ import { Grid, TextField, MenuItem, Button } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { postData } from "../services/SubmissionsApi";
-import { getLanguages } from "../services/JudgeApi";
-import { getAllLanguages } from "../redux/actions/judgeActions";
-
-const languages = [
-  {
-    value: "javascript",
-    label: "JavaScript",
-  },
-  {
-    value: "python",
-    label: "Python",
-  },
-  {
-    value: "java",
-    label: "Java",
-  },
-  // Add more languages as needed
-];
+import { getLanguages, getSubmission, submitCode } from "../services/JudgeApi";
+import {
+  getAllLanguages,
+  getSubmissionData,
+  getSubmissionToken,
+} from "../redux/actions/judgeActions";
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -32,36 +20,64 @@ const Editor = () => {
   const [code, setCode] = useState("");
   const [stdInput, setStdInput] = useState("");
   const [stdOutput, setStdOutput] = useState("");
-
+  const [submission, setSubmission] = useState(null);
+  
   useEffect(() => {
     dispatch(getAllLanguages());
   }, [dispatch]);
 
-  const allLang = useSelector((state) => state.JudgeReducer.data);
+  const allLanguages = useSelector((state) => state.JudgeReducer.data);
+  // const [languages, setLanguages] = useState(allLanguages);
+  const storeToken = useSelector((state) => state.JudgeTokenReducer.token);
+  const submissionData = useSelector((state) => state.SubmissionReducer.data);
 
   const handleRunCode = async() => {
-    // try {
-    //   const response = await getLanguages();
-    //   console.log(response);
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    console.log("ALL Lang: ", allLang);
+    try {
+      const codeData = {
+        language_id: language,
+        source_code: code,
+        stdin: stdInput,
+      };
+      const submitResponse = await submitCode(codeData);
+      if(submitResponse.status === 200) {
+        const token = submitResponse.data.token;
+        const submissionResponse = await getSubmission(token);
+        if(submissionResponse.status === 200) {
+          if(submissionResponse.data.stdout !== null) {
+            setStdOutput(submissionResponse.data.stdout)
+          }
+          else {
+            setStdOutput(submissionResponse.data.stderr)
+          }
+        }
+      }
+      else {
+        console.log("Error while submitting code.")
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
-  const handleSubmitCode = async() => {
+  useEffect(() => {
+    if(submissionData != null) {
+      console.log("Submission Data: ", submissionData);
+    }
+  }, [submissionData]);
+
+  const handleSubmitCode = async () => {
     console.log("submit code.");
     const data = {
       username: username,
       code_language: language,
       stdIn: stdInput,
       stdOut: stdOutput,
-      code: code
-    }
+      code: code,
+    };
     const pd = await postData(data);
     console.log("submit response: ", pd);
   };
-  const redirectToAllSubmissions = () => {
+  const redirectToAllSubmissions = async () => {
     navigate("/entries");
   };
 
@@ -87,11 +103,12 @@ const Editor = () => {
               onChange={(e) => setLanguage(e.target.value)}
               sx={{ width: "100%" }}
             >
-              {languages.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
+              {allLanguages &&
+                allLanguages.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>
+                    {option.name}
+                  </MenuItem>
+                ))}
             </TextField>
           </Grid>
           <Grid item xs={12}>
