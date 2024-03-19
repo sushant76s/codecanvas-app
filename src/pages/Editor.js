@@ -1,84 +1,111 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import { Grid, TextField, MenuItem, Button } from "@mui/material";
+import {
+  Grid,
+  TextField,
+  MenuItem,
+  Button,
+  CircularProgress,
+} from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
-import { postData } from "../services/SubmissionsApi";
-import { getLanguages, getSubmission, submitCode } from "../services/JudgeApi";
-import {
-  getAllLanguages,
-  getSubmissionData,
-  getSubmissionToken,
-} from "../redux/actions/judgeActions";
+import { getAllLanguages } from "../redux/actions/judgeActions";
+import { submitData } from "../redux/actions/entriesActions";
+import { getSubmission, submitCode } from "../services/JudgeApi";
 
 const Editor = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [username, setUsername] = useState("");
-  const [language, setLanguage] = useState("");
+  const [language, setLanguage] = useState(null);
   const [code, setCode] = useState("");
   const [stdInput, setStdInput] = useState("");
   const [stdOutput, setStdOutput] = useState("");
-  const [submission, setSubmission] = useState(null);
-  
+
+  // Loading button states
+  const [runLoading, setRunLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   useEffect(() => {
     dispatch(getAllLanguages());
   }, [dispatch]);
 
   const allLanguages = useSelector((state) => state.JudgeReducer.data);
-  // const [languages, setLanguages] = useState(allLanguages);
-  const storeToken = useSelector((state) => state.JudgeTokenReducer.token);
   const submissionData = useSelector((state) => state.SubmissionReducer.data);
+  const currentData = useSelector((state) => state.TableDataReducer.current);
 
-  const handleRunCode = async() => {
+  const handleRunCode = async () => {
     try {
+      setRunLoading(true);
       const codeData = {
-        language_id: language,
+        language_id: language?.id || null,
         source_code: code,
         stdin: stdInput,
       };
       const submitResponse = await submitCode(codeData);
-      if(submitResponse.status === 200) {
+      if (submitResponse.status === 200) {
         const token = submitResponse.data.token;
         const submissionResponse = await getSubmission(token);
-        if(submissionResponse.status === 200) {
-          if(submissionResponse.data.stdout !== null) {
-            setStdOutput(submissionResponse.data.stdout)
-          }
-          else {
-            setStdOutput(submissionResponse.data.stderr)
+        if (submissionResponse.status === 200) {
+          if (submissionResponse.data.stdout !== null) {
+            setStdOutput(submissionResponse.data.stdout);
+          } else {
+            setStdOutput(submissionResponse.data.stderr);
           }
         }
+      } else {
+        console.log("Error while submitting code.");
       }
-      else {
-        console.log("Error while submitting code.")
-      }
-    } catch (e) {
-      console.log(e);
+      setRunLoading(false);
+    } catch (error) {
+      console.log("Error running code: ", error);
     }
   };
 
   useEffect(() => {
-    if(submissionData != null) {
+    if (submissionData != null) {
       console.log("Submission Data: ", submissionData);
     }
   }, [submissionData]);
 
-  const handleSubmitCode = async () => {
-    console.log("submit code.");
+  const handleSubmitCode = () => {
+    setSubmitLoading(true);
     const data = {
       username: username,
-      code_language: language,
+      code_language: language?.name ? language.name : "NULL",
       stdIn: stdInput,
       stdOut: stdOutput,
       code: code,
     };
-    const pd = await postData(data);
-    console.log("submit response: ", pd);
+    try {
+      dispatch(submitData(data));
+      if (currentData != null) {
+        setTimeout(() => {
+          setSubmitLoading(false);
+        }, 1000);
+        alert("Submitted!");
+      } else {
+        setSubmitLoading(false);
+        alert("Unable to submit!");
+      }
+    } catch (error) {
+      console.log("Error: ", error);
+    }
   };
+
   const redirectToAllSubmissions = async () => {
     navigate("/entries");
+  };
+
+  const handleSetLanguage = (e) => {
+    const selectedLanguage = allLanguages.find(
+      (option) => option.id === e.target.value
+    );
+    setLanguage({
+      id: e.target.value,
+      name: selectedLanguage ? selectedLanguage.name : "",
+    });
   };
 
   return (
@@ -99,8 +126,8 @@ const Editor = () => {
               select
               required
               label="Select Language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              value={language?.id || ""}
+              onChange={(e) => handleSetLanguage(e)}
               sx={{ width: "100%" }}
             >
               {allLanguages &&
@@ -151,20 +178,28 @@ const Editor = () => {
             <Button
               variant="contained"
               color="primary"
+              disabled={runLoading}
               onClick={handleRunCode}
               fullWidth
+              endIcon={
+                runLoading && <CircularProgress size={20} color="inherit" />
+              }
             >
-              Run Code
+              {runLoading ? "Running..." : "Run Code"}
             </Button>
           </Grid>
           <Grid item xs={6}>
             <Button
               variant="contained"
               color="primary"
+              disabled={submitLoading}
               onClick={handleSubmitCode}
               fullWidth
+              endIcon={
+                submitLoading && <CircularProgress size={20} color="inherit" />
+              }
             >
-              Submit Code
+              {submitLoading ? "Submitting..." : "Submit Code"}
             </Button>
           </Grid>
           <Grid item xs={12}>

@@ -1,24 +1,32 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { styled } from '@mui/material/styles';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from '@mui/material/Stack';
-import { Divider } from "@mui/material";
-import { getData, postData } from "../services/SubmissionsApi";
-import { SERVER_ENDPOINT } from "../config-global";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Typography,
+  Button,
+  Stack,
+  Divider,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import CodeDialog from "../components/code-dialog/CodeDialog";
+import { getSubmittedData } from "../redux/actions/entriesActions";
 
 const columns = [
   { id: "username", label: "USER", minWidth: 170 },
-  { id: "code_language", label: "CODE LANGUAGE", minWidth: 100, align: 'center' },
+  {
+    id: "code_language",
+    label: "CODE LANGUAGE",
+    minWidth: 100,
+    align: "center",
+  },
   {
     id: "stdIn",
     label: "INPUT",
@@ -35,28 +43,42 @@ const columns = [
   },
   {
     id: "code",
-    label: "CODE",
+    label: "SOURCE CODE",
     minWidth: 170,
     align: "right",
     // format: (value) => value.toFixed(2),
   },
 ];
 
-function createData(user, lang, inp, out, code) {
-  // const density = population / size;
-  return { username: user, code_language: lang, stdIn: inp, stdOut: out, code };
-}
+// function createData(user, lang, inp, out, code) {
+//   // const density = population / size;
+//   return { username: user, code_language: lang, stdIn: inp, stdOut: out, code };
+// }
 
-const crows = [
-  createData("John", "C++", 36, 6, "Hello, World!"),
-  createData("John", "C++", 36, 6, "Hello, World!"),
-];
+// const crows = [
+//   createData("John", "C++", 36, 6, "Hello, World!"),
+//   createData("John", "C++", 36, 6, "Hello, World!"),
+// ];
 
-export default function Entries() {
+const Entries = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [dialogStatus, setDialogStatus] = useState(false);
+  const [codeData, setCodeData] = useState("");
+  const submittedData = useSelector((state) => state.TableDataReducer.total);
+  const [rows, setRows] = useState(null);
 
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  useEffect(() => {
+    dispatch(getSubmittedData());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (submittedData !== null) {
+      setRows(submittedData);
+    }
+  }, [submittedData]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -67,26 +89,7 @@ export default function Entries() {
     setPage(0);
   };
 
-  const [rows, setRows] = React.useState(crows);
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getData();
-        console.log("Data: ", data.data);
-        setRows(data.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  
-  
-
-  const backToEditor = async() => {
+  const backToEditor = async () => {
     navigate("/editor");
   };
 
@@ -98,15 +101,20 @@ export default function Entries() {
     color: theme.palette.text.secondary,
   }));
 
-  console.log("url: ", SERVER_ENDPOINT)
+  const handleCodeDialog = (data) => {
+    setCodeData(data);
+    setDialogStatus(!dialogStatus);
+  };
 
   return (
     <>
       <Stack direction="row" spacing={3}>
-          <Button variant="outlined" onClick={backToEditor}>Back to editor</Button>
-          <Typography variant="h6">All submissions</Typography>
+        <Button variant="outlined" onClick={backToEditor}>
+          Back to editor
+        </Button>
+        <Typography variant="h6">All submissions</Typography>
       </Stack>
-      <Divider sx={{mt: 2, mb: 2}}/>
+      <Divider sx={{ mt: 2, mb: 2 }} />
       <Paper sx={{ width: "100%", overflow: "hidden" }}>
         <TableContainer sx={{ maxHeight: 400 }}>
           <Table stickyHeader aria-label="sticky table">
@@ -124,43 +132,57 @@ export default function Entries() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => {
-                  return (
-                    <TableRow
-                      hover
-                      role="checkbox"
-                      tabIndex={-1}
-                      key={row.code}
-                    >
-                      {columns.map((column) => {
-                        const value = row[column.id];
-                        return (
-                          <TableCell key={column.id} align={column.align}>
-                            {/* {column.format && typeof value === "number"
+              {rows &&
+                rows
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => {
+                    return (
+                      <TableRow
+                        hover
+                        role="checkbox"
+                        tabIndex={-1}
+                        key={row.code}
+                      >
+                        {columns.map((column) => {
+                          const value = row[column.id];
+                          return (
+                            <TableCell key={column.id} align={column.align}>
+                              {/* {column.format && typeof value === "number"
                               ? column.format(value)
                               : value} */}
-                              {value}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
+                              {column.id !== "code" ? (
+                                value
+                              ) : (
+                                <Button onClick={() => handleCodeDialog(row)}>
+                                  View Code
+                                </Button>
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={rows.length}
+          count={rows && rows.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+      <CodeDialog
+        status={dialogStatus}
+        handleDialog={handleCodeDialog}
+        data={codeData}
+      />
     </>
   );
-}
+};
+
+export default Entries;
