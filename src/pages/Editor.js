@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { Grid, TextField, MenuItem, Button } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { postData } from "../services/SubmissionsApi";
+import { getLanguages } from "../services/JudgeApi";
+import { getAllLanguages } from "../redux/actions/judgeActions";
 
 const languages = [
   {
@@ -23,15 +26,29 @@ const languages = [
 
 const Editor = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [username, setUsername] = useState("");
   const [language, setLanguage] = useState("");
   const [code, setCode] = useState("");
   const [stdInput, setStdInput] = useState("");
   const [stdOutput, setStdOutput] = useState("");
 
-  const handleRunCode = () => {
-    console.log("code run.");
+  useEffect(() => {
+    dispatch(getAllLanguages());
+  }, [dispatch]);
+
+  const allLang = useSelector((state) => state.JudgeReducer.data);
+
+  const handleRunCode = async() => {
+    // try {
+    //   const response = await getLanguages();
+    //   console.log(response);
+    // } catch (error) {
+    //   console.error(error);
+    // }
+    console.log("ALL Lang: ", allLang);
   };
+
   const handleSubmitCode = async() => {
     console.log("submit code.");
     const data = {
