@@ -33,8 +33,8 @@ const Editor = () => {
 
 
   const allLanguages = useSelector((state) => state.JudgeReducer.data);
-  const submissionData = useSelector((state) => state.SubmissionReducer.data);
-  const currentData = useSelector((state) => state.TableDataReducer.current);
+  // const submissionData = useSelector((state) => state.SubmissionReducer.data);
+  // const currentData = useSelector((state) => state.TableDataReducer.current);
 
   const handleRunCode = async () => {
     try {
@@ -64,11 +64,11 @@ const Editor = () => {
     }
   };
 
-  useEffect(() => {
-    if (submissionData != null) {
-      console.log("Submission Data: ", submissionData);
-    }
-  }, [submissionData]);
+  // useEffect(() => {
+  //   if (submissionData != null) {
+  //     console.log("Submission Data: ", submissionData);
+  //   }
+  // }, [submissionData]);
 
   const handleSubmitCode = () => {
     setSubmitLoading(true);
