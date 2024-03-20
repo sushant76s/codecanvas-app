@@ -43,6 +43,13 @@ const columns = [
     // format: (value) => value.toLocaleString("en-US"),
   },
   {
+    id: "created_at",
+    label: "SUBMISSION TIME",
+    minWidth: 170,
+    align: "center",
+    // format: (value) => value.toFixed(2),
+  },
+  {
     id: "code",
     label: "SOURCE CODE",
     minWidth: 170,
