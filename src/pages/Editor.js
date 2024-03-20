@@ -95,7 +95,7 @@ const Editor = () => {
   };
 
   const handleSetLanguage = (e) => {
-    const selectedLanguage = allLanguages.find(
+    const selectedLanguage = allLanguages && allLanguages.find(
       (option) => option.id === e.target.value
     );
     setLanguage({
