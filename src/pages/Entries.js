@@ -18,6 +18,7 @@ import {
 import { styled } from "@mui/material/styles";
 import CodeDialog from "../components/code-dialog/CodeDialog";
 import { getSubmittedData } from "../redux/actions/entriesActions";
+import EmptyTableContent from "../components/empty-content/EmptyTableContent";
 
 const columns = [
   { id: "username", label: "USER", minWidth: 170 },
@@ -106,6 +107,8 @@ const Entries = () => {
     setDialogStatus(!dialogStatus);
   };
 
+  const isNotFound = rows && rows.length === 0;
+
   return (
     <>
       <Stack direction="row" spacing={3}>
@@ -164,6 +167,7 @@ const Entries = () => {
                     );
                   })}
             </TableBody>
+            <EmptyTableContent isEmpty={isNotFound} />
           </Table>
         </TableContainer>
         <TablePagination

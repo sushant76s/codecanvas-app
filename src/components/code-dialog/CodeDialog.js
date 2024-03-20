@@ -85,7 +85,7 @@ export default function CodeDialog({ status, handleDialog, data }) {
         </DialogContent>
         <DialogActions>
           <Button autoFocus onClick={handleCopy}>
-            Copy
+            Copy Code
           </Button>
         </DialogActions>
       </BootstrapDialog>

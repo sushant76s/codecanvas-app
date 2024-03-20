@@ -31,6 +31,7 @@ const Editor = () => {
     dispatch(getAllLanguages());
   }, [dispatch]);
 
+
   const allLanguages = useSelector((state) => state.JudgeReducer.data);
   const submissionData = useSelector((state) => state.SubmissionReducer.data);
   const currentData = useSelector((state) => state.TableDataReducer.current);
@@ -80,20 +81,15 @@ const Editor = () => {
     };
     try {
       dispatch(submitData(data));
-      if (currentData != null) {
-        setTimeout(() => {
-          setSubmitLoading(false);
-        }, 1000);
-        alert("Submitted!");
-      } else {
+      setTimeout(() => {
         setSubmitLoading(false);
-        alert("Unable to submit!");
-      }
+      }, 1000);
     } catch (error) {
+      setSubmitLoading(false);
       console.log("Error: ", error);
     }
   };
-
+  
   const redirectToAllSubmissions = async () => {
     navigate("/entries");
   };
