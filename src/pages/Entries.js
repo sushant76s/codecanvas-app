@@ -19,6 +19,8 @@ import { styled } from "@mui/material/styles";
 import CodeDialog from "../components/code-dialog/CodeDialog";
 import { getSubmittedData } from "../redux/actions/entriesActions";
 import EmptyTableContent from "../components/empty-content/EmptyTableContent";
+import { serverCheck } from "../services/HealthCheck";
+import ServerError from "../components/error/ServerError";
 
 const columns = [
   { id: "username", label: "USER", minWidth: 170 },
@@ -78,6 +80,9 @@ const Entries = () => {
   const submittedData = useSelector((state) => state.TableDataReducer.total);
   const [rows, setRows] = useState(null);
 
+  const [serverStatus, setServerStatus] = useState(true);
+ 
+
   useEffect(() => {
     dispatch(getSubmittedData());
   }, [dispatch]);
@@ -115,6 +120,25 @@ const Entries = () => {
   };
 
   const isNotFound = rows && rows.length === 0;
+
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        const response = await serverCheck();
+        if (!response.data.status) {
+          setServerStatus(false);
+        }
+      } catch (error) {
+        setServerStatus(false);
+      }
+    };
+
+    checkServerStatus();
+  }, []);
+
+  if (serverStatus === false) {
+    return <ServerError status={serverStatus} />;
+  }
 
   return (
     <>

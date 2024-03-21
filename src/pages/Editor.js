@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import {
@@ -7,12 +7,16 @@ import {
   MenuItem,
   Button,
   CircularProgress,
+  Chip,
+  Box,
 } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { submitData } from "../redux/actions/entriesActions";
 import { getSubmission, submitCode } from "../services/JudgeApi";
 import { languages } from "../assets/data/languages";
+import { serverCheck } from "../services/HealthCheck";
+import ServerError from "../components/error/ServerError";
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -27,29 +31,68 @@ const Editor = () => {
   const [runLoading, setRunLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  const [compileStatus, setCompileStatus] = useState("");
+
+  const [serverStatus, setServerStatus] = useState(true);
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        const response = await serverCheck();
+        if (!response.data.status) {
+          setServerStatus(false);
+        }
+      } catch (error) {
+        setServerStatus(false);
+      }
+    };
+
+    checkServerStatus();
+  }, []);
+
+  if (serverStatus === false) {
+    return <ServerError status={serverStatus} />;
+  }
+
+
+
+
   const handleRunCode = async () => {
     try {
       setRunLoading(true);
+      setCompileStatus("");
       const codeData = {
         language_id: language?.id || null,
         source_code: code,
         stdin: stdInput,
       };
       const submitResponse = await submitCode(codeData);
+      let submissionResponse;
+      let state = '';
+
       if (submitResponse.status === 200) {
         const token = submitResponse.data.token;
-        const submissionResponse = await getSubmission(token);
-        if (submissionResponse.status === 200) {
-          if (submissionResponse.data.stdout !== null) {
-            setStdOutput(submissionResponse.data.stdout);
-          } else {
-            setStdOutput(submissionResponse.data.stderr);
+        do {
+          submissionResponse = await getSubmission(token);
+          console.log("Submission Response: ", submissionResponse);
+          if (submissionResponse.status === 200) {
+            setCompileStatus(submissionResponse.data.status.description)
+            if (submissionResponse.data.status.description === 'Accepted') {
+              setStdOutput(submissionResponse.data.stdout);
+              setRunLoading(false);
+              break;
+            }
+            state = submissionResponse.data.status.description
           }
-        }
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } while (state === 'Processing')
       } else {
         console.log("Error while submitting code.");
       }
       setRunLoading(false);
+      if (submissionResponse?.data?.status.description !== 'Accepted') {
+        setCompileStatus(submissionResponse.data.status.description);
+        setStdOutput(submissionResponse.data.stderr);
+      }
     } catch (error) {
       console.log("Error running code: ", error);
     }
@@ -74,7 +117,7 @@ const Editor = () => {
       console.log("Error: ", error);
     }
   };
-  
+
   const redirectToAllSubmissions = async () => {
     navigate("/entries");
   };
@@ -88,6 +131,9 @@ const Editor = () => {
       name: selectedLanguage ? selectedLanguage.name : "",
     });
   };
+
+
+  console.log("status: ", compileStatus);
 
   return (
     <Grid container spacing={2}>
@@ -111,11 +157,11 @@ const Editor = () => {
               onChange={(e) => handleSetLanguage(e)}
               sx={{ width: "100%" }}
             >
-              { languages.map((option) => (
-                  <MenuItem key={option.id} value={option.id}>
-                    {option.name}
-                  </MenuItem>
-                ))}
+              {languages.map((option) => (
+                <MenuItem key={option.id} value={option.id}>
+                  {option.name}
+                </MenuItem>
+              ))}
             </TextField>
           </Grid>
           <Grid item xs={12}>
@@ -134,7 +180,7 @@ const Editor = () => {
             <TextField
               label="Input"
               multiline
-              rows={7}
+              rows={6}
               variant="outlined"
               value={stdInput}
               onChange={(e) => setStdInput(e.target.value)}
@@ -142,10 +188,22 @@ const Editor = () => {
             />
           </Grid>
           <Grid item xs={12}>
+            <Grid item xs={12}>
+              <Grid container spacing={1}>
+                <Grid item xs={6}>
+                  <Chip label="Status" variant="outlined" sx={{ width: '100%', borderRadius: 0 }} />
+                </Grid>
+                <Grid item xs={6}>
+                  <Chip label={compileStatus} variant="outlined" sx={{ width: '100%', borderRadius: 0 }} />
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
             <TextField
               label="Output"
               multiline
-              rows={7}
+              rows={6}
               variant="outlined"
               value={stdOutput}
               InputProps={{

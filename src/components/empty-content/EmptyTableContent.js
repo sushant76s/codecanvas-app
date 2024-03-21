@@ -19,11 +19,10 @@ const EmptyTableContent = ({ isEmpty }) => {
         >
           Table is Empty!
         </Typography>
-      ) : (
-        ""
-      )}
+      ) : null}
     </>
   );
+
 };
 
 EmptyTableContent.propTypes = {
