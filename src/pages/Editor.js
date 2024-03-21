@@ -73,8 +73,8 @@ const Editor = () => {
         const token = submitResponse.data.token;
         do {
           submissionResponse = await getSubmission(token);
-          console.log("Submission Response: ", submissionResponse);
-          if (submissionResponse.status === 200) {
+          // console.log("Submission Response: ", submissionResponse);
+          if (submissionResponse && submissionResponse?.status === 200) {
             setCompileStatus(submissionResponse.data.status.description)
             if (submissionResponse.data.status.description === 'Accepted') {
               setStdOutput(submissionResponse.data.stdout);
@@ -82,6 +82,10 @@ const Editor = () => {
               break;
             }
             state = submissionResponse.data.status.description
+          } else {
+            setStdOutput('Execution failed try again.');
+            setCompileStatus("Failed, try again.");
+            break;
           }
           await new Promise(resolve => setTimeout(resolve, 2000));
         } while (state === 'Processing')
@@ -90,8 +94,8 @@ const Editor = () => {
       }
       setRunLoading(false);
       if (submissionResponse?.data?.status.description !== 'Accepted') {
-        setCompileStatus(submissionResponse.data.status.description);
-        setStdOutput(submissionResponse.data.stderr);
+        setCompileStatus(submissionResponse?.data?.status.description);
+        setStdOutput(submissionResponse?.data?.stderr);
       }
     } catch (error) {
       console.log("Error running code: ", error);
@@ -133,7 +137,7 @@ const Editor = () => {
   };
 
 
-  console.log("status: ", compileStatus);
+  // console.log("status: ", compileStatus);
 
   return (
     <Grid container spacing={2}>
