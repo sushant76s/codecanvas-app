@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import {
@@ -10,9 +10,9 @@ import {
 } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
-import { getAllLanguages } from "../redux/actions/judgeActions";
 import { submitData } from "../redux/actions/entriesActions";
 import { getSubmission, submitCode } from "../services/JudgeApi";
+import { languages } from "../assets/data/languages";
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -26,15 +26,6 @@ const Editor = () => {
   // Loading button states
   const [runLoading, setRunLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-
-  useEffect(() => {
-    dispatch(getAllLanguages());
-  }, [dispatch]);
-
-
-  const allLanguages = useSelector((state) => state.JudgeReducer.data);
-  // const submissionData = useSelector((state) => state.SubmissionReducer.data);
-  // const currentData = useSelector((state) => state.TableDataReducer.current);
 
   const handleRunCode = async () => {
     try {
@@ -64,12 +55,6 @@ const Editor = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (submissionData != null) {
-  //     console.log("Submission Data: ", submissionData);
-  //   }
-  // }, [submissionData]);
-
   const handleSubmitCode = () => {
     setSubmitLoading(true);
     const data = {
@@ -95,7 +80,7 @@ const Editor = () => {
   };
 
   const handleSetLanguage = (e) => {
-    const selectedLanguage = allLanguages && allLanguages.find(
+    const selectedLanguage = languages.find(
       (option) => option.id === e.target.value
     );
     setLanguage({
@@ -126,8 +111,7 @@ const Editor = () => {
               onChange={(e) => handleSetLanguage(e)}
               sx={{ width: "100%" }}
             >
-              {allLanguages &&
-                allLanguages.map((option) => (
+              { languages.map((option) => (
                   <MenuItem key={option.id} value={option.id}>
                     {option.name}
                   </MenuItem>
